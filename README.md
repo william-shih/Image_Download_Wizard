@@ -1,11 +1,11 @@
 # Image_Download_Wizard
-Execute "Images_Download_Wizard_install.sh" or setup by yourself
+Execute <font color=blue size=2> "Images_Download_Wizard_install.sh" </font> or setup by yourself
 
 Manaul:
-# install package
+## install package
 	$ sudo apt-get install cifs-utils nfs-common
 
-# create script, set
+## create script, set
 	(1) mount remote direct, ${DIR1/DIR2} (must exist)
 	(2) username
 	(3) OA password
@@ -14,33 +14,33 @@ Manaul:
 
 	save as "${Script}" in /home/${username}/
 
-# create file ".get_img_config" and folder ${dir_name} at /home/${username}/.
+## create file ".get_img_config" and folder ${dir_name} at /home/${username}/.
 	EX:
 	dir_name = "Official_Images"                 <---Copy to image folder
 	remote_mount1 = "Remote_mount/3F_Release"    <---DIR1
 	remote_mount2 = "Remote_mount/3F_Release2"   <---DIR2
 	script = ".bash_mountremote"                 <---Script
+	width = 6                                    <---Array width
+## Usage:
 
-Usage:
+$ ./get_official_image.pl
 
-$ ./Images_Download_Wizard.pl
-
-[screen]
-	Project List:
+[<font color=green>screen</font>]
+<font color=yellow>	Project List:
 	=============================================================
 	1. Z301ML
 	2. V500KL
 	3. Z301MFL
 
 	Please select the project (Z301ML): 2
+</font>
+## You can select one project to download image.
 
-# You can select one project to download image.
-
-[screen]
-	Project: V500KL
+[<font color=green>screen</font>]
+<font color=yellow>	Project: V500KL
 
 	Version of V500KL
-	=========================================================================================
+	==============================================================
 	[01] 14.0200.1612.34    [02] 14.0100.1612.34    [03] 14.0200.1612.33    [04] 14.0100.1612.33    [05] 14.0100.1612.32    [06] 14.0200.1612.32
 	[07] 14.0200.1612.30.1  [08] 14.0101.1612.7     [09] 14.0200.1612.31    [10] 14.0100.1612.31    [11] 14.0200.1612.30    [12] 14.0100.1612.30
 	[13] 14.0200.1612.29    [14] 14.0100.1612.29    [15] 14.0200.1612.28    [16] 14.0200.1612.27    [17] 14.0100.1612.28    [18] 14.0200.1612.27
@@ -56,32 +56,33 @@ $ ./Images_Download_Wizard.pl
 
 
 	Please select version or resort (t/v): 1
+</font>
+## Here the versions are default sorted by time, if you want sort by filename you can enter "v".
 
-# Here the versions are default sorted by time, if you want sort by filename you can enter "v".
-
-[screen]
-	Images of 14.0200.1612.34_3000320_18.3.0_170523_20170524
-	=========================================================================================
+[<font color=green>screen</font>]
+<font color=yellow>	Images of 14.0200.1612.34_3000320_18.3.0_170523_20170524
+	===============================================================
 	(1) VZW_V500KL_14.0200.1612.34_3000320_18.3.0_170523_Phone-userdebug
 	(2) VZW_V500KL_14.0200.1612.34_3000320_18.3.0_170523_Phone-user
 
 
 
 	Please select image: 1
+</font>
+## Select the sku or debug image to download
 
-# Select the sku or debug image to download
-
-[screen]
-	Select image zipfile "VZW_V500KL_14.0200.1612.33_3000320_18.3.0_170523_Phone-userdebug.raw.zip"
+[<font color=green>screen</font>]
+<font color=yellow>	Select image zipfile "VZW_V500KL_14.0200.1612.33_3000320_18.3.0_170523_Phone-userdebug.raw.zip"
 
 	Is this right?(y/n) y
 
 	Copy file ...
 	[6%] ======> -
-
-[screen]
-	Unzip file ...
-	[100%] ====================================================================================================> \
+</font>
+[<font color=green>screen</font>]
+<font color=yellow>	Unzip file ...
+	[100%] ==========================================================================================> \
 	Complete
 	Unzip done.
 	Path: /home/william_shih/Official_Images/V500KL/VZW_V500KL_14.0200.1612.33_3000320_18.3.0_170523_Phone-userdebug
+</font>
