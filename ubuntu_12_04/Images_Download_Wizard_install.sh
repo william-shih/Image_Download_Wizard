@@ -147,6 +147,6 @@ sudo $FILENAME
 # create symbolic link
 clear
 echo "Create symbolic link at $WROOT/get_official_image.pl ..."
-ln -s $CUR/Images_Download_Wizard.pl $WROOT/get_official_image.pl
+ln -s $CUR/Images_Download_Wizard.pl $CUR/../get_official_image.pl
 echo "Done. You can enjoy your download now!"
 echo "Try ./Download_Image_Wizard.pl"
