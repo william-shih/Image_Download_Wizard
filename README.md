@@ -1,6 +1,8 @@
 # Image_Download_Wizard
 Execute <font color=blue size=2> "Images_Download_Wizard_install.sh" </font> or setup by yourself
 
+You can add new project at "Prj_list".
+
 Manaul:
 ## install package
 	$ sudo apt-get install cifs-utils nfs-common

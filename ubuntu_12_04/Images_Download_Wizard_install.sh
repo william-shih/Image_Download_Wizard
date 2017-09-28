@@ -78,9 +78,9 @@ fi
 if [ "$yn" == "y" ]; then
 	touch $GET_IMG_CONFIG
 	echo "dir_name = $img_dir" > $GET_IMG_CONFIG
-	echo "remote_mount1 = \"$mount1\"" >> $GET_IMG_CONFIG
-	echo "remote_mount2 = \"$mount2\"" >> $GET_IMG_CONFIG
-	echo "script = \"mount.sh\"" >> $GET_IMG_CONFIG
+	echo "remote_mount1 = $mount1" >> $GET_IMG_CONFIG
+	echo "remote_mount2 = $mount2" >> $GET_IMG_CONFIG
+	echo "script = mount.sh" >> $GET_IMG_CONFIG
 	echo "width = $width" >> $GET_IMG_CONFIG
 fi
 

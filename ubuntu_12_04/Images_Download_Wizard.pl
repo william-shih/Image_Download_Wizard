@@ -18,6 +18,7 @@ sub set_title{
 	print " Copyright: Ver 1.0 2017/5/18\t William_Shih<william_shih\@asus\.com>\n\n";
 	print "            Ver 1.1 2017/5/22\t William_Shih<william_shih\@asus\.com>\n\n";
 	print "            Ver 1.2 2017/9/20\t William_Shih<william_shih\@asus\.com>\n\n";
+	print "            Ver 1.3 2017/9/28\t William_Shih<william_shih\@asus\.com>\n\n";
 	print " This file used to get official images without trivial commands.\n\n";
 	print " Enjoy your download procedure!!\n";
 	print "*******************************************************************\n\n\n";
@@ -29,7 +30,7 @@ sub set_environment{
 	chomp($wizard_root);
 	print "Current Path: $wizard_root\n\n";
 	my $config_file = ".get_img_config"; # configure file for this wizard
-	$dir_name = "Output";               # output folder
+	$dir_name = "Images";               # output folder
 	if(-f "$config_file"){
 		open(FHD, "$config_file") or die "Could not open file $config_file $!";
 		while (my $line = <FHD>){
@@ -59,24 +60,46 @@ sub set_environment{
 # select download destination folder and create one if not exist.
 sub select_project{
 
+	my $prj_file = "Prj_list";
 	$project = "Z301ML"; #default
 	print "Project List:\n";
 	print "=============================================================\n";
-	print "1. Z301ML\n";
-	print "2. V500KL\n";
-	print "3. Z301MFL\n";
-	print "\nPlease select the project ($project): ";
-	chomp($input=<STDIN>);
-	if($input eq 1 ){
-		$project = "Z301ML";
-	}elsif($input eq 2){
-		$project = "V500KL";
-	}elsif($input eq 3){
-		$project = "Z301MFL";
-	}elsif($input){
-		$project = $input;
+	if(-f $prj_file){
+		my @prjs = `cat $prj_file`;
+		my @new_prjs;
+		$cnt = 1;
+		foreach my $prj (@prjs){
+			chomp($prj);
+			print "$cnt. $prj\n";
+			$new_prjs[$cnt] = $prj;
+			$cnt = $cnt + 1;
+		}
+		print "\nPlease select the project ($project): ";
+		chomp($input=<STDIN>);
+		if ($input =~ /^\s*[1-9][0-9]*\s*$/){
+			if($input >= $cnt){
+				Error_Handle("Out of range");
+			}
+			$project = $new_prjs[$input];
+		}else{
+			Error_Handle("Invalid input");
+		}
+	}else{
+		print "1. Z301ML\n";
+		print "2. V500KL\n";
+		print "3. Z301MFL\n";
+		print "\nPlease select the project ($project): ";
+		chomp($input=<STDIN>);
+		if($input eq 1 ){
+			$project = "Z301ML";
+		}elsif($input eq 2){
+			$project = "V500KL";
+		}elsif($input eq 3){
+			$project = "Z301MFL";
+		}elsif($input){
+			$project = $input;
+		}
 	}
-
 	$des_dir = "$wizard_root/$dir_name/$project"; #output folder
 	print "destination folder: $des_dir\n";
 	if(! -d $des_dir){
@@ -88,12 +111,14 @@ sub select_project{
 # show selected project and set download source server
 sub set_project_config{
 	print "Project: $project\n";
-        if ($project eq "Z301ML" or $project eq "Z301MFL"){
+	$server = "$wizard_root/$remote_mount1";
+	print "$wizard_root/$remote_mount2";
+	if(-d "$wizard_root/$remote_mount1/$project"){
 		$server = "$wizard_root/$remote_mount1";
-	}elsif($project eq "V500KL"){
+	}elsif(-d "$wizard_root/$remote_mount2/$project"){
 		$server = "$wizard_root/$remote_mount2";
 	}else{
-		print "Not support path for $project!!\n"
+		Error_Handle("\nNot support path for $project");
 	}
 }
 
@@ -138,8 +163,7 @@ sub show_image_version{
 	chomp($input=<STDIN>);
 	if ($input =~ /^\s*[0-9][0-9]*\s*$/){
 		if($input >= $cnt){
-			print "Out of range, Exit!!\n";
-			exit 1;
+			Error_Handle("Out of range");
 		}
 		$ver = $new_ver[$input];
 		print "Select verion \"$ver\"\n\n";
@@ -150,8 +174,7 @@ sub show_image_version{
 		clear_screen();
 		show_image_version("1");
 	}else{
-		print "Error input, Exit!!\n";
-		exit 1;
+		Error_Handle("Invalid input");
 	}
 	set_percent_bar();
 }
@@ -184,15 +207,13 @@ sub show_SKU_and_debug{
 		chomp($input=<STDIN>);
 		if ($input =~ /^\s*[1-9][0-9]*\s*$/){
 			if($input >= $cnt){
-				print "Out of range, Exit!!\n";
-				exit 1;
+				Error_Handle("Out of range");
 			}
 			$fname = $fname_arr[$input];
 			$img = $new_img[$input];
 			print "Select image zipfile \"$img\"\n\n";
 		}else{
-			print "Error input, Exit!!\n";
-			exit 1;
+			Error_Handle("Invalid input");
 		}
 		print "Is this right?(y/n) ";
 		chomp($input=<STDIN>);
@@ -329,4 +350,10 @@ sub gen_percent_bar(){
 	}
 	print out_file "}\n";
 	close(out_file);
+}
+
+sub Error_Handle(){
+	$str = $_[0];
+	print "$str, Exit!!\n";
+	exit 1;
 }
