@@ -18,6 +18,7 @@ sub set_title{
 	print " Copyright: Ver 1.0 2017/5/18\t William_Shih<william_shih\@asus\.com>\n\n";
 	print "            Ver 1.1 2017/5/22\t William_Shih<william_shih\@asus\.com>\n\n";
 	print "            Ver 1.2 2017/9/20\t William_Shih<william_shih\@asus\.com>\n\n";
+	print "            Ver 1.3 2017/9/28\t William_Shih<william_shih\@asus\.com>\n\n";
 	print " This file used to get official images without trivial commands.\n\n";
 	print " Enjoy your download procedure!!\n";
 	print "*******************************************************************\n\n\n", color("reset");
