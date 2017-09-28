@@ -63,6 +63,7 @@ clear
 echo "Creating $CUR/../$img_dir ..."
 mkdir -p $CUR/../$img_dir
 
+width=6
 clear
 echo "The default width is 6"
 read -p "Reset width as : " width
