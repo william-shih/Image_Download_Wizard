@@ -2,23 +2,19 @@
 
 use Term::ANSIColor;
 use POSIX;
+use sigtrap qw/handler signal_handler normal-signals/;
 
 # start
 
 set_title();
 set_environment();
 select_project();
-set_project_config();
-show_image_version("1");
 show_SKU_and_debug();
 
 sub set_title{
 	print color("grey13"), "\n*******************************************************************\n";
 	print " Module: ",color("white"), "Images Download Wizard\n\n", color("grey13");
-	print " Copyright: Ver 1.0 2017/5/18\t William_Shih<william_shih\@asus\.com>\n\n";
-	print "            Ver 1.1 2017/5/22\t William_Shih<william_shih\@asus\.com>\n\n";
-	print "            Ver 1.2 2017/9/20\t William_Shih<william_shih\@asus\.com>\n\n";
-	print "            Ver 1.3 2017/9/28\t William_Shih<william_shih\@asus\.com>\n\n";
+	print " Copyright: Ver 1.4 2017/9/29\t William_Shih<william_shih\@asus\.com>\n\n";
 	print " This file used to get official images without trivial commands.\n\n";
 	print " Enjoy your download procedure!!\n";
 	print "*******************************************************************\n\n\n", color("reset");
@@ -49,11 +45,7 @@ sub set_environment{
 		}
 		close($config_file);
 	}else{
-		# use default setting
-		$remote_mount1 = "Remote_mount/3F_Release";  # prj
-		$remote_mount2 = "Remote_mount/3F_Release2"; # prj2
-		$script = ".bash_mountremote";               # mount script
-		$array_width = 6;                            # default set array width as 6
+		Error_Handle("Please execute \"Images_Download_Wizard_install.sh\" again");
 	}
 }
 
@@ -62,12 +54,11 @@ sub select_project{
 
 	my $prj_file = "Prj_list";
 	$project = "Z301ML"; #default
-	print "Project List:\n";
-	print "=============================================================\n";
+	show_frame_title("Project List:\n");
 	if(-f $prj_file){
 		my @prjs = `cat $prj_file`;
 		my @new_prjs;
-		$cnt = 1;
+		my $cnt = 1;
 		foreach my $prj (@prjs){
 			chomp($prj);
 			print "$cnt. $prj\n";
@@ -81,25 +72,11 @@ sub select_project{
 				Error_Handle("Out of range");
 			}
 			$project = $new_prjs[$input];
-	#		print "Select project: ", color("bold yellow"), "\"$project\"\n\n", color("reset");
 		}else{
 			Error_Handle("Invalid input");
 		}
 	}else{
-		print "1. Z301ML\n";
-		print "2. V500KL\n";
-		print "3. Z301MFL\n";
-		print "\nPlease select the project ($project): ";
-		chomp($input=<STDIN>);
-		if($input eq 1 ){
-			$project = "Z301ML";
-		}elsif($input eq 2){
-			$project = "V500KL";
-		}elsif($input eq 3){
-			$project = "Z301MFL";
-		}elsif($input){
-			$project = $input;
-		}
+		Error_Handle("Please provide $prj_file");
 	}
 	$des_dir = "$wizard_root/$dir_name/$project"; #output folder
 	print "destination folder: $des_dir\n";
@@ -107,44 +84,37 @@ sub select_project{
 		system("mkdir -p $des_dir"); # if not exist, create one
 		print "Create $des_dir folder.\n"
 	}
+	set_project_config();
 }
 
 # show selected project and set download source server
 sub set_project_config{
 	print "Project:", color("bold yellow"), " $project\n", color("reset");
 	$server = "$wizard_root/$remote_mount1";
-	print "$wizard_root/$remote_mount2";
-	if(-d "$wizard_root/$remote_mount1/$project"){
-		$server = "$wizard_root/$remote_mount1";
-	}elsif(-d "$wizard_root/$remote_mount2/$project"){
+	if(-d "$wizard_root/$remote_mount2/$project"){
 		$server = "$wizard_root/$remote_mount2";
 	}else{
 		Error_Handle("\nNot support path for $project");
 	}
+	show_image_version("-t");
 }
 
 # show available versions of selected project
 sub show_image_version{
 	my @vers;
-	if($_[0] eq "0"){
-		@vers=`ls $server/$project/Images`;
-	}elsif($_[0] eq "1"){
-		@vers=`ls -t $server/$project/Images`;
-	}
+	@vers=`ls $_[0] $server/$project/Images`;
 	my @new_ver;
-	$cnt = 1;
-	print "\nVersion of $project\n";
-	print "=========================================================================================\n";
+	show_frame_title("\nVersion of $project\n");
 	if(!@vers){
 		print "Remounting ...\n";
-		system("bash $wizard_root/$script");
-		sleep 3;
+		system("bash $wizard_root/$script &");
+		sleep 1;
 		my @vers=`ls $server/$project/Images`;
 		if(!@vers){
-			print "Please set the mount script!\n";
-			exit 1;
+			Error_Handle("Cannot find mount script");
 		}
 	}
+	my $cnt = 1;
 	foreach my $file (@vers){
 		if ($file =~ m/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\.?[0-9]?)_/){
 			$ver = $1;
@@ -159,8 +129,7 @@ sub show_image_version{
 			}
 		}
 	}
-	print "\n\n\n";
-	print "Please select version or sort again (t/v): ";
+	show_select_prompt("Please select version or sort again (t/v): ");
 	chomp($input=<STDIN>);
 	if ($input =~ /^\s*[0-9][0-9]*\s*$/){
 		if($input >= $cnt){
@@ -170,10 +139,10 @@ sub show_image_version{
 		print "Select verion ", color("bold yellow"), "\"$ver\"\n\n", color("reset");
 	}elsif($input eq "v" or $input eq "V"){
 		clear_screen();
-		show_image_version("0");
+		show_image_version("");
 	}elsif($input eq "t" or $input eq "T"){
 		clear_screen();
-		show_image_version("1");
+		show_image_version("-t");
 	}else{
 		Error_Handle("Invalid input");
 	}
@@ -183,16 +152,15 @@ sub show_SKU_and_debug{
 	my @imgs=`ls $server/$project/Images/$ver/*.raw.zip`;
 	my @fname_arr;
 	my @new_img;
-	$cnt = 1;
 
 	if(!@imgs){
 		clear_screen();
-		print "Image are not ready, back.\n";
-		show_image_version("1");
+		print "Image is not ready, back.\n";
+		show_image_version("-t");
 		show_SKU_and_debug();
 	}else{
-		print "Images of $ver\n";
-		print "=========================================================================================\n";
+		show_frame_title("Image of $ver\n");
+	        my $cnt = 1;
 		foreach my $file (@imgs){
 			if($file =~ m/.*\/(.*)\.raw\.zip/){
 				$fname = $1;
@@ -203,8 +171,7 @@ sub show_SKU_and_debug{
 				$cnt = $cnt + 1;
 			}
 		}
-		print "\n\n\n";
-		print "Please select image: ";
+		show_select_prompt("Please select image: ");
 		chomp($input=<STDIN>);
 		if ($input =~ /^\s*[1-9][0-9]*\s*$/){
 			if($input >= $cnt){
@@ -216,17 +183,11 @@ sub show_SKU_and_debug{
 		}else{
 			Error_Handle("Invalid input");
 		}
-		print "Is this right?(y/n) ";
-		chomp($input=<STDIN>);
-		$slt = lc $input;
+		yes_or_no("Is this right", $slt);
 		if($slt eq "y"){
-			print "Flash after download task?(y/n) ";
-			chomp($input=<STDIN>);
-			$flash = lc $input;
+			yes_or_no("Flash after download task", $flash);
 			if (-f "$des_dir/$img") {
-				print "File already exit. Copy whatever?(y/n) ";
-				chomp($input=<STDIN>);
-				$slt = lc $input;
+				yes_or_no("File already exit. Copy whatever", $slt);
 				if($slt eq "y"){
 					system("rm $des_dir/$img");
 					sleep 1;
@@ -242,12 +203,11 @@ sub show_SKU_and_debug{
 				print "Copy done. Start unzipping $img ...\n";
 			}
 			if(-d "$des_dir/$fname") {
-				print "Directory already exit. Unzip whatever?(y/n) ";
-				chomp($input=<STDIN>);
-				$slt = lc $input;
+				yes_or_no("Directory already exit. Unzip whatever", $slt);
 				if($slt eq "y"){
+					print "select yes $des_dir/$fname\n";
 					system("rm -rf $des_dir/$fname");
-					sleep 2;
+					sleep 1;
 					system("unzip $des_dir/$img -d $des_dir/$fname > /dev/null &") == 0 or warn "$0: unzip exited " . ($? >> 8) . "\n";
 					show_percent_bar("$des_dir/$img", "$des_dir/$fname", "Unzip file ...", "zip");
 					print "Unzip done.\n";
@@ -263,11 +223,9 @@ sub show_SKU_and_debug{
 			clear_screen();
 			print color("green"), "Restart\n", color("reset");
 			select_project();
-			set_project_config();
-			show_image_version("1");
 			show_SKU_and_debug();
 		}else{
-			print "Error input, STOP!!\n"
+			Error_Handle("Invalid input");
 		}
 	}
 	if($flash eq "y"){
@@ -278,10 +236,12 @@ sub show_SKU_and_debug{
 sub show_percent_bar(){
 	$cur_size = 0;
 	$srcinfo = `du $_[0]`;
+	$des_path = $_[1];
+	$frame_title = $_[2];
 	if($srcinfo =~ m/([1-9][0-9]*)[\t ]+\/home\//){
-		print "$total_size\n";
 		$total_size = $1;
-		if ($_[3]){
+		print "$total_size\n";
+		if ($_[3]){                      # unzip part
 			$line = `unzip -l $_[0] | tail -n1`;
 			if($line =~ m/([1-9][0-9]*)[\t ].*files/){
 				$total_size = floor($1 / 1024);
@@ -290,30 +250,9 @@ sub show_percent_bar(){
 		print "Total Size: $total_size\n";
 	}
 	while($cur_size < $total_size){
-		$desinfo = `du $_[1]`;
-		if($desinfo =~ m/([1-9][0-9]*)[\t ]+\/home\//){
-			$cur_size = $1;
-		}
-		$percent = floor(100 * $cur_size / $total_size);
-		clear_screen();
-		print "$_[2]\n";
-		print color("bold yellow"), "[$percent%] ", color("reset"), "$percent_bar[$percent] /\n";
-		$desinfo = `du $_[1]`;
-		if($desinfo =~ m/([1-9][0-9]*)[\t ]+\/home\//){
-			$cur_size = $1;
-		}
-		$percent = floor(100 * $cur_size / $total_size);
-		clear_screen();
-		print "$_[2]\n";
-		print color("bold yellow"), "[$percent%] ", color("reset"), "$percent_bar[$percent] -\n";
-		$desinfo = `du $_[1]`;
-		if($desinfo =~ m/([1-9][0-9]*)[\t ]+\/home\//){
-			$cur_size = $1;
-		}
-		$percent = floor(100 * $cur_size / $total_size);
-		clear_screen();
-		print "$_[2]\n";
-		print color("bold yellow"), "[$percent%] ", color("reset"), "$percent_bar[$percent] \\\n";
+		show_frame("/");
+		show_frame("-");
+		show_frame("\\");
 	}
 	print "Complete\n";
 }
@@ -326,8 +265,8 @@ sub flash_image_hook(){
 }
 
 sub set_percent_bar(){
-	$idx = 0;
-	$str = ">";
+	my $idx = 0;
+	my $str = ">";
 	while($idx <= 100){
 		$percent_bar[$idx] = $str;
 		$str = "=$str";
@@ -339,22 +278,61 @@ sub clear_screen(){
 	system("clear");
 }
 
-sub gen_percent_bar(){
-	open(out_file, ">percent_bar.txt");
-	$idx = 1;
-	$str = ">";
-	while($idx <= 100){
-		print out_file "}elsif(\$percent < $idx){\n";
-		print out_file "\tprint \"$str /\\n\";\n";
-		$str = "=$str";
-		$idx = $idx + 1;
+sub show_frame(){
+	$pattern = $_[0];
+	$desinfo = `du $des_path`;
+	if($desinfo =~ m/([1-9][0-9]*)[\t ]+\/home\//){
+		$cur_size = $1;
 	}
-	print out_file "}\n";
-	close(out_file);
+	$percent = floor(100 * $cur_size / $total_size);
+	clear_screen();
+	print "$frame_title\n";
+	print color("bold yellow"), "[$percent%] ", color("reset"), "$percent_bar[$percent] $pattern\n";
+}
+
+sub show_frame_title(){
+	print "$_[0]";
+	print "=============================================================\n";
+}
+
+sub show_select_prompt(){
+	print "\n\n\n";
+	print "$_[0]";
+}
+
+sub yes_or_no(){
+	print "$_[0]?(y/n) ";
+	chomp($input=<STDIN>);
+	$_[1] = lc $input;
 }
 
 sub Error_Handle(){
-	$str = $_[0];
-	print color("red"), "$str, Exit!!\n", color("reset");
+	print color("red"), "$_[0], Exit!!\n", color("reset");
+	exit 1;
+}
+
+sub signal_handler(){
+	print "\nleaving ...\n";
+	@threads = `ps -t`;
+	foreach my $thread (@threads){
+		if($thread =~ m/([1-9][0-9]*) .*:[0-9][0-9] ([a-z]+) /){
+			$pid = $1;
+			$cmd = $2;
+			if($cmd eq "cp"){
+				system("kill -9 $pid");
+				print("Removing $des_dir/$img ...");
+				system("rm $des_dir/$img");
+				print "\nRemoving thread $pid\n";
+
+			}
+			if($cmd eq "unzip"){
+				system("kill -9 $pid");
+				print("Removing $des_dir/$fname ...");
+				system("rm -rf $des_dir/$fname");
+				sleep 2;
+				print "\nRemoving thread $pid\n";
+			}
+		}
+	}
 	exit 1;
 }
