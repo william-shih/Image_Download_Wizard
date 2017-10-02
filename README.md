@@ -3,7 +3,7 @@ Execute <font color=blue size=2> "Images_Download_Wizard_install.sh" </font> or 
 
 You can add new project at "Prj_list".
 
-Manaul:
+Manual:
 ## install package
 	$ sudo apt-get install cifs-utils nfs-common
 
